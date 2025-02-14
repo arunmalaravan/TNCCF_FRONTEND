@@ -1,0 +1,137 @@
+<p-toast />
+<p-toolbar styleClass="m-2">
+    <ng-template #start>
+        <div class="flex flex-wrap gap-2">
+            <p-button label="New Amount" icon="pi pi-plus" class="mr-2" (click)="showDialog()" />
+        </div>
+    </ng-template>
+
+    <ng-template #end>
+        <div class="flex flex-wrap gap-2">
+            <p-button pTooltip="Import" icon="pi pi-plus" severity="secondary" [rounded]="true" />
+            <p-button pTooltip="Export" icon="pi pi-upload" severity="secondary" [rounded]="true" />
+            <p-button pTooltip="Print" icon="pi pi-print" severity="secondary" [rounded]="true" />
+        </div>
+    </ng-template>
+</p-toolbar>
+
+<p-table [value]="amounts" [rows]="rows" [paginator]="true" [tableStyle]="{ 'min-width': '75rem' }" [rowHover]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries" [showCurrentPageReport]="true"
+    styleClass="grid m-2 shadow-md rounded-lg overflow-x-auto" [rowsPerPageOptions]="rowsPerPageOptions" dataKey="scheme_id" [expandedRowKeys]="expandedRows">
+
+    <ng-template #caption>
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 p-2">
+            <h5 class="text-lg font-semibold text-center sm:text-left">Manage Amounts</h5>
+            <p-iconfield class="w-full sm:w-auto flex items-center">
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" placeholder="Global Search..."
+                    class="w-full sm:w-auto p-2 border rounded-md" />
+            </p-iconfield>
+        </div>
+    </ng-template>
+
+    <ng-template #header>
+        <tr>
+            <th>Expand</th>
+            <th>S.No</th>
+            <th>Scheme</th>
+            <th>Export</th>
+        </tr>
+    </ng-template>
+
+    <ng-template #body let-amount let-rowIndex="rowIndex" let-expanded="expanded">
+        <tr>
+            <td>
+                <p-button type="button" pRipple [pRowToggler]="amount"
+                    [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+            </td>
+            <td>{{rowIndex + 1}}</td>
+            <td>{{amount.scheme_name}}</td>
+            <td>
+                <p-button pTooltip="Export Excel" tooltipPosition="left" icon="pi pi-upload" [rounded]="true" [outlined]="true" (click)="export(amount)" />
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template #expandedrow let-mapping>
+        <tr>
+            <td colspan="7">
+                <div class="p-4">
+                    <p-table [value]="mapping.details" dataKey="scheme_id">
+                        <ng-template #header>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Company</th>
+                                <th>District</th>
+                                <th>Amount</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-detail let-rowIndex="rowIndex">
+                            <tr>
+                                <td>{{rowIndex + 1}}</td>
+                                <td>{{detail.company_name}}</td>
+                                <td>{{detail.district_name}}</td>
+                                <td>{{ detail.amount | currency: 'INR' }}</td>
+                                <td>
+                                    <p-button icon="pi pi-pencil" severity="warn" [rounded]="true" [outlined]="true"
+                                        (click)="editAmount(detail.amount_id)" pTooltip="Edit Amount" tooltipPosition="left"/>
+                                </td>
+                                <td>
+                                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
+                                        (click)="deleteAmount(detail.amount_id)" pTooltip="Delete Amount" tooltipPosition="left"/>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="6">No districts have been mapped for this company yet.</td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+
+</p-table>
+
+<p-dialog [header]="amountId ? 'Update Amount' : 'Add Amount'" [(visible)]="visible" [modal]="true"
+    [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="true"
+    [resizable]="true" [maximizable]="true">
+
+    <form [formGroup]="amountForm">
+        <div class="mb-3 flex flex-col gap-2">
+            <label>Scheme</label>
+            <p-select formControlName="scheme_id" [options]="schemes" optionLabel="scheme_name" optionValue="scheme_id"
+                placeholder="Select a Scheme" class="w-full" appendTo="body" [filter]="true" filterBy="scheme_name"
+                [showClear]="true" />
+        </div>
+
+        <div class="mb-3 flex flex-col gap-2">
+            <label>Company</label>
+            <p-select formControlName="company_id" [options]="companies" optionLabel="company_name"
+                optionValue="company_id" placeholder="Select a Company" class="w-full" appendTo="body" [filter]="true"
+                filterBy="company_name" [showClear]="true" (onChange)="onCompanyChange()" />
+        </div>
+        <div class="mb-3 flex flex-col gap-2">
+            <label>District</label>
+            <p-select formControlName="district_id" [options]="districts" optionLabel="district_name"
+                optionValue="district_id" placeholder="Select a District" class="w-full" appendTo="body" [filter]="true"
+                filterBy="district_name" [showClear]="true" (onChange)="onDistrictChange()" />
+        </div>
+
+        <div class="mb-3 flex flex-col gap-2">
+            <label>Amount</label>
+            <p-inputnumber formControlName="amount" inputId="locale-user" [minFractionDigits]="2" />
+        </div>
+    </form>
+
+    <ng-template #footer>
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" severity="secondary" (onClick)="cancel()" />
+            <p-button label="Save" (click)="createAmount()" />
+        </div>
+    </ng-template>
+
+</p-dialog>

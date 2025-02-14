@@ -1,0 +1,12 @@
+<p-menubar [model]="items" styleClass="m-2 bor">
+    <ng-template #end>
+        <div class="flex items-center gap-2">
+            
+            <input type="text" pInputText placeholder="Search" class="w-50" />
+            <p-avatar image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png" shape="circle" />
+                        <p-button [pTooltip]="darkMode ? 'Light Mode' : 'Dark Mode'" [icon]="darkMode ? 'pi pi-sun' : 'pi pi-moon'"
+                severity="secondary" [rounded]="true" (click)="toggleMode()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-menubar>
